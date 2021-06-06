@@ -182,7 +182,7 @@ packages:
       name: convert
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.1.1"
+    version: "3.0.0"
   crypto:
     dependency: transitive
     description:
@@ -448,6 +448,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.9.7"
+  neat_periodic_task:
+    dependency: "direct main"
+    description:
+      name: neat_periodic_task
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "2.0.0"
   octo_image:
     dependency: transitive
     description:
@@ -609,6 +616,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.1.5"
+  retry:
+    dependency: transitive
+    description:
+      name: retry
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "3.1.0"
   rxdart:
     dependency: transitive
     description:
@@ -642,6 +656,13 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.99"
+  slugid:
+    dependency: transitive
+    description:
+      name: slugid
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "1.1.0"
   smooth_page_indicator:
     dependency: "direct main"
     description:
