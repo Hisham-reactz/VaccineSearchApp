@@ -10,7 +10,7 @@ dependencies:
   auto_size_text:
   built_collection: ^5.0.0-nullsafety.0
   built_value: ^8.0.0-nullsafety.0
-  cached_network_image: 2.5.1
+  cached_network_image: ^2.5.1
   chewie: ^0.12.2
   # cloud_firestore: ^0.16.0
   font_awesome_flutter:
