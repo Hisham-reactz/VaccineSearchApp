@@ -1,6 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'api.dart';
+import 'dart:async';
+import 'package:http/http.dart' as http;
 
 class HomePageWidget extends StatefulWidget {
   final data;
@@ -9,6 +11,23 @@ class HomePageWidget extends StatefulWidget {
 
   @override
   _HomePageWidgetState createState() => _HomePageWidgetState();
+}
+
+Future<List> fetchVaccine(http.Client client, args) async {
+  dynamic urlz = args["type"] == 'pincode'
+      ? 'https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/findByPin?date=' +
+          args["date"] +
+          '&pincode=' +
+          args["pincode"].toString()
+      : 'https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/findByDistrict?date=' +
+          args["date"] +
+          '&district_id=' +
+          args["district_id"].toString();
+
+  final response = await client.get(Uri.parse(urlz));
+
+// Use the compute function to run parsePhotos in a separate isolate.
+  return compute(parseVaccines, response.body);
 }
 
 class _HomePageWidgetState extends State<HomePageWidget> {

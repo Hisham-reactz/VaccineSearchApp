@@ -1,7 +1,4 @@
 import 'dart:convert';
-import 'dart:async';
-import 'package:http/http.dart' as http;
-import 'package:flutter/foundation.dart';
 
 class States {
   final num stateid;
@@ -38,39 +35,6 @@ class Districts {
       districtid: json['district_id'] as num,
     );
   }
-}
-
-Future<List> fetchStates() async {
-  http.Client client;
-  final response = await client
-      .get(Uri.parse('https://cdn-api.co-vin.in/api/v2/admin/location/states'));
-
-// Use the compute function to run parsePhotos in a separate isolate.
-
-  return compute(parseStates, response.body);
-}
-
-List parseStates(String parz) {
-  final parsed = jsonDecode(parz);
-  return parsed["states"].map((json) => States.fromJson(json)).toList();
-}
-
-Future<List> fetchDist(num id) async {
-  http.Client client;
-// print(id);
-  final response = await client.get(Uri.parse(
-      'https://cdn-api.co-vin.in/api/v2/admin/location/districts/' +
-          id.toString()));
-
-// Use the compute function to run parsePhotos in a separate isolate.
-// print(response.body);
-
-  return compute(parseDistricts, response.body);
-}
-
-List parseDistricts(String parz) {
-  final parsed = jsonDecode(parz);
-  return parsed["districts"].map((json) => Districts.fromJson(json)).toList();
 }
 
 class Vaccine {
@@ -124,21 +88,14 @@ class Vaccine {
   }
 }
 
-Future<List> fetchVaccine(http.Client client, args) async {
-  dynamic urlz = args["type"] == 'pincode'
-      ? 'https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/findByPin?date=' +
-          args["date"] +
-          '&pincode=' +
-          args["pincode"].toString()
-      : 'https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/findByDistrict?date=' +
-          args["date"] +
-          '&district_id=' +
-          args["district_id"].toString();
+List parseStates(String parz) {
+  final parsed = jsonDecode(parz);
+  return parsed["states"].map((json) => States.fromJson(json)).toList();
+}
 
-  final response = await client.get(Uri.parse(urlz));
-
-// Use the compute function to run parsePhotos in a separate isolate.
-  return compute(parseVaccines, response.body);
+List parseDistricts(String parz) {
+  final parsed = jsonDecode(parz);
+  return parsed["districts"].map((json) => Districts.fromJson(json)).toList();
 }
 
 // A function that converts a response body into a List<Photo>.

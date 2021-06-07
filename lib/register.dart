@@ -1,17 +1,41 @@
 import 'package:flutter/cupertino.dart';
-import 'api.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
+import 'package:http/http.dart' as http;
 import 'home.dart';
 import 'support.dart';
 import 'package:auto_size_text/auto_size_text.dart';
+import 'dart:async';
+import 'api.dart';
 
 class RegisterPageWidget extends StatefulWidget {
   RegisterPageWidget({Key key}) : super(key: key);
 
   @override
   _RegisterPageWidgetState createState() => _RegisterPageWidgetState();
+}
+
+Future<List> fetchStates(http.Client client) async {
+  final response = await client
+      .get(Uri.parse('https://cdn-api.co-vin.in/api/v2/admin/location/states'));
+
+// Use the compute function to run parsePhotos in a separate isolate.
+
+  return compute(parseStates, response.body);
+}
+
+Future<List> fetchDist(http.Client client, num id) async {
+// print(id);
+  final response = await client.get(Uri.parse(
+      'https://cdn-api.co-vin.in/api/v2/admin/location/districts/' +
+          id.toString()));
+
+// Use the compute function to run parsePhotos in a separate isolate.
+// print(response.body);
+
+  return compute(parseDistricts, response.body);
 }
 
 class _RegisterPageWidgetState extends State<RegisterPageWidget> {
@@ -276,7 +300,7 @@ class _RegisterPageWidgetState extends State<RegisterPageWidget> {
                                             : 'State',
                                         border: OutlineInputBorder())),
                                 suggestionsCallback: (pattern) async {
-                                  return fetchStates();
+                                  return fetchStates(http.Client());
                                 },
                                 itemBuilder: (context, suggestion) {
                                   return ListTile(
@@ -304,7 +328,8 @@ class _RegisterPageWidgetState extends State<RegisterPageWidget> {
                                         border: OutlineInputBorder())),
                                 suggestionsCallback: (pattern) async {
                                   return curstate?.stateid != null
-                                      ? fetchDist(curstate.stateid)
+                                      ? fetchDist(
+                                          http.Client(), curstate.stateid)
                                       : [];
                                 },
                                 itemBuilder: (context, suggestion) {

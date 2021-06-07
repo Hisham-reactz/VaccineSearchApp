@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'calendar.dart';
+import 'register.dart';
 
 void main() {
   runApp(MyApp());
@@ -14,7 +14,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: CalendarWidget(),
+      home: RegisterPageWidget(),
     );
   }
 }
