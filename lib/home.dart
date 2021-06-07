@@ -1,8 +1,40 @@
+import 'dart:convert';
+
+import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'api.dart';
 import 'dart:async';
 import 'package:http/http.dart' as http;
+import 'dart:io';
+import 'package:neat_periodic_task/neat_periodic_task.dart';
+
+bool stat = false;
+Future<void> check() async {
+// Create a periodic task that prints 'Hello World' every 30s
+  final scheduler = NeatPeriodicTaskScheduler(
+    interval: Duration(days: 1),
+    name: 'Vaccine Check',
+    timeout: Duration(seconds: 15),
+    task: () async {
+      fetchVaccine(http.Client(), {
+        'type': 'pincodecheck',
+        'date': DateTime.now().day.toString() +
+            '-' +
+            DateTime.now().month.toString() +
+            '-' +
+            DateTime.now().year.toString(),
+        'pincode': '679322',
+      });
+      // stat?
+    }, //pin to be replaced from local storage
+    minCycle: Duration(minutes: 5),
+  );
+
+  scheduler.start();
+  await ProcessSignal.sigterm.watch().first;
+  await scheduler.stop();
+}
 
 class HomePageWidget extends StatefulWidget {
   final data;
@@ -14,7 +46,7 @@ class HomePageWidget extends StatefulWidget {
 }
 
 Future<List> fetchVaccine(http.Client client, args) async {
-  dynamic urlz = args["type"] == 'pincode'
+  dynamic urlz = args["type"] == 'pincode' || args["type"] == 'pincodecheck'
       ? 'https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/findByPin?date=' +
           args["date"] +
           '&pincode=' +
@@ -25,6 +57,14 @@ Future<List> fetchVaccine(http.Client client, args) async {
           args["district_id"].toString();
 
   final response = await client.get(Uri.parse(urlz));
+
+  if (args["type"] == 'pincodecheck') {
+    final parsed = jsonDecode(response.body);
+    parsed["sessions"].map((json) => {
+          if (num.parse(json['available_capacity_dose1']).toInt() > 0)
+            {stat = true}
+        });
+  }
 
 // Use the compute function to run parsePhotos in a separate isolate.
   return compute(parseVaccines, response.body);
@@ -37,6 +77,25 @@ class _HomePageWidgetState extends State<HomePageWidget> {
   void initState() {
     super.initState();
     vaccinez = fetchVaccine;
+    check();
+    AwesomeNotifications().isNotificationAllowed().then((isAllowed) {
+      if (!isAllowed) {
+        // Insert here your friendly dialog box before call the request method
+        // This is very important to not harm the user experience
+        AwesomeNotifications().requestPermissionToSendNotifications();
+      }
+    });
+    AwesomeNotifications().initialize(
+        // set the icon to null if you want to use the default app icon
+        'resource://drawable/res_app_icon',
+        [
+          NotificationChannel(
+              channelKey: 'basic_channel',
+              channelName: 'Basic notifications',
+              channelDescription: 'Notification channel for basic tests',
+              defaultColor: Color(0xFF9D50DD),
+              ledColor: Colors.white)
+        ]);
 
     // DateTime datenow = DateTime.now();
     //   while (datenow.hour > 18 && datenow.hour < 23) {
