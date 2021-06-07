@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 
@@ -17,6 +19,23 @@ class _CalendarWidgetState extends State<CalendarWidget> {
   DateTime _focusedDay = DateTime.now();
   DateTime _selectedDay;
   List<bool> isSelected = [true, false];
+  TextEditingController pinctrl;
+  static const List<String> _kOptions = <String>[
+    'aardvark',
+    'bobcat',
+    'chameleon',
+  ];
+  @override
+  void initState() {
+    super.initState();
+    pinctrl = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    pinctrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +55,7 @@ class _CalendarWidgetState extends State<CalendarWidget> {
             mainAxisSize: MainAxisSize.max,
             children: [
               Container(
-                  padding: EdgeInsets.only(top: 13),
+                  padding: EdgeInsets.only(top: 13, bottom: 13),
                   child: ToggleButtons(
                     children: <Widget>[
                       Padding(
@@ -59,6 +78,56 @@ class _CalendarWidgetState extends State<CalendarWidget> {
                     },
                     isSelected: isSelected,
                   )),
+              isSelected[0]
+                  ? Container(
+                      width: 300,
+                      child: TextField(
+                        controller: pinctrl,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(50))),
+                          labelText: 'PinCode',
+                        ),
+                      ),
+                    )
+                  : Padding(
+                      padding: EdgeInsets.all(7),
+                      child: Row(children: [
+                        Text('STATE '),
+                        Expanded(
+                            child: Autocomplete<String>(
+                          optionsBuilder: (TextEditingValue textEditingValue) {
+                            if (textEditingValue.text == '') {
+                              return const Iterable<String>.empty();
+                            }
+                            return _kOptions.where((String option) {
+                              return option.contains(
+                                  textEditingValue.text.toLowerCase());
+                            });
+                          },
+                          onSelected: (String selection) {
+                            print('You just selected $selection');
+                          },
+                        )),
+                        Text('DISTRICT '),
+                        Expanded(
+                            child: Autocomplete<String>(
+                          optionsBuilder: (TextEditingValue textEditingValue) {
+                            if (textEditingValue.text == '') {
+                              return const Iterable<String>.empty();
+                            }
+                            return _kOptions.where((String option) {
+                              return option.contains(
+                                  textEditingValue.text.toLowerCase());
+                            });
+                          },
+                          onSelected: (String selection) {
+                            print('You just selected $selection');
+                          },
+                        ))
+                      ])),
               TableCalendar(
                 firstDay: kFirstDay,
                 lastDay: kLastDay,

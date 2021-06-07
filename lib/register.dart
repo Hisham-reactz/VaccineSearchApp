@@ -1,88 +1,17 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
+import 'api.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'home.dart';
 import 'support.dart';
 import 'package:auto_size_text/auto_size_text.dart';
-import 'dart:async';
 
 class RegisterPageWidget extends StatefulWidget {
   RegisterPageWidget({Key key}) : super(key: key);
 
   @override
   _RegisterPageWidgetState createState() => _RegisterPageWidgetState();
-}
-
-class States {
-  final num stateid;
-  final String statename;
-
-  States({
-    this.statename,
-    this.stateid,
-  });
-
-  factory States.fromJson(Map<String, dynamic> json) {
-    return States(
-      statename: json['state_name'] as String,
-      stateid: json['state_id'] as num,
-    );
-  }
-}
-
-class Districts {
-  final num stateid;
-  final num districtid;
-  final String districtname;
-
-  Districts({
-    this.stateid,
-    this.districtid,
-    this.districtname,
-  });
-
-  factory Districts.fromJson(Map<String, dynamic> json) {
-    return Districts(
-      districtname: json['district_name'] as String,
-      stateid: json['state_id'] as num,
-      districtid: json['district_id'] as num,
-    );
-  }
-}
-
-Future<List> fetchStates(http.Client client) async {
-  final response = await client
-      .get(Uri.parse('https://cdn-api.co-vin.in/api/v2/admin/location/states'));
-
-  // Use the compute function to run parsePhotos in a separate isolate.
-
-  return compute(parseStates, response.body);
-}
-
-List parseStates(String parz) {
-  final parsed = jsonDecode(parz);
-  return parsed["states"].map((json) => States.fromJson(json)).toList();
-}
-
-Future<List> fetchDist(http.Client client, num id) async {
-  // print(id);
-  final response = await client.get(Uri.parse(
-      'https://cdn-api.co-vin.in/api/v2/admin/location/districts/' +
-          id.toString()));
-
-  // Use the compute function to run parsePhotos in a separate isolate.
-  // print(response.body);
-
-  return compute(parseDistricts, response.body);
-}
-
-List parseDistricts(String parz) {
-  final parsed = jsonDecode(parz);
-  return parsed["districts"].map((json) => Districts.fromJson(json)).toList();
 }
 
 class _RegisterPageWidgetState extends State<RegisterPageWidget> {
@@ -347,7 +276,7 @@ class _RegisterPageWidgetState extends State<RegisterPageWidget> {
                                             : 'State',
                                         border: OutlineInputBorder())),
                                 suggestionsCallback: (pattern) async {
-                                  return fetchStates(http.Client());
+                                  return fetchStates();
                                 },
                                 itemBuilder: (context, suggestion) {
                                   return ListTile(
@@ -375,8 +304,7 @@ class _RegisterPageWidgetState extends State<RegisterPageWidget> {
                                         border: OutlineInputBorder())),
                                 suggestionsCallback: (pattern) async {
                                   return curstate?.stateid != null
-                                      ? fetchDist(
-                                          http.Client(), curstate.stateid)
+                                      ? fetchDist(curstate.stateid)
                                       : [];
                                 },
                                 itemBuilder: (context, suggestion) {
