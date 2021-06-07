@@ -1,8 +1,9 @@
+import 'dart:convert';
+// import 'dart:developer';
 import 'dart:ui';
-
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
-
 import '../utils.dart';
 
 class CalendarWidget extends StatefulWidget {
@@ -20,6 +21,7 @@ class _CalendarWidgetState extends State<CalendarWidget> {
   DateTime _selectedDay;
   List<bool> isSelected = [true, false];
   TextEditingController pinctrl;
+  dynamic _caldata = [];
   static const List<String> _kOptions = <String>[
     'aardvark',
     'bobcat',
@@ -29,12 +31,36 @@ class _CalendarWidgetState extends State<CalendarWidget> {
   void initState() {
     super.initState();
     pinctrl = TextEditingController();
+    // fetchCal();
   }
 
   @override
   void dispose() {
     pinctrl.dispose();
     super.dispose();
+  }
+
+  fetchCal() async {
+    final response = await http.get(
+      Uri.parse(
+        'https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByPin?pincode=' +
+            '679322' +
+            '&date=' +
+            _focusedDay.day.toString() +
+            '/' +
+            _focusedDay.month.toString() +
+            '/' +
+            _focusedDay.year.toString(),
+      ),
+    );
+    final responseJson = jsonDecode(response.body);
+    setState(() {
+      _caldata = responseJson;
+      // ignore: unnecessary_statements
+      _caldata == null ? _caldata = [] : '';
+    });
+
+    return responseJson;
   }
 
   @override
