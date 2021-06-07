@@ -24,6 +24,7 @@ dependencies:
   # google_mobile_ads: ^0.13.0
   # pay: ^1.0.4
   neat_periodic_task: ^2.0.0
+  lazy_load_scrollview: ^1.3.0
   # video_player: ^1.0.1
   # youtube_player_flutter: ^7.0.0+7
   # awesome_notifications: any # Any attribute updates automatically your source to the last version
