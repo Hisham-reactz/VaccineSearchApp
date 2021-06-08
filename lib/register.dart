@@ -41,10 +41,19 @@ Future<List> fetchDist(http.Client client, num id) async {
 
 class _RegisterPageWidgetState extends State<RegisterPageWidget> {
   final _formKey = GlobalKey<FormBuilderState>();
+  DateTime datenow = DateTime.now();
+  dynamic curstate;
+  dynamic curdist;
+  dynamic curdate;
 
   @override
   void initState() {
     super.initState();
+    curdate = datenow.day.toString() +
+        '-' +
+        datenow.month.toString() +
+        '-' +
+        datenow.year.toString();
     initz();
     check();
   }
@@ -54,14 +63,6 @@ class _RegisterPageWidgetState extends State<RegisterPageWidget> {
     selectNotificationSubject.close();
     super.dispose();
   }
-
-  dynamic curstate;
-  dynamic curdist;
-  dynamic curdate = DateTime.now().day.toString() +
-      '-' +
-      DateTime.now().month.toString() +
-      '-' +
-      DateTime.now().year.toString();
 
   @override
   Widget build(BuildContext context) {
@@ -543,7 +544,7 @@ class _RegisterPageWidgetState extends State<RegisterPageWidget> {
                             ])),
                       FormBuilderDateTimePicker(
                         name: 'date',
-                        initialValue: DateTime.now(),
+                        initialValue: datenow,
                         // onChanged: _onChanged,
                         inputType: InputType.date,
                         decoration: InputDecoration(
@@ -639,11 +640,11 @@ class _RegisterPageWidgetState extends State<RegisterPageWidget> {
                         onPressed: () {
                           _formKey.currentState.reset();
                           setState(() {
-                            curdate = DateTime.now().day.toString() +
+                            curdate = datenow.day.toString() +
                                 '-' +
-                                DateTime.now().month.toString() +
+                                datenow.month.toString() +
                                 '-' +
-                                DateTime.now().year.toString();
+                                datenow.year.toString();
                             curdist = null;
                             curstate = null;
                           });
