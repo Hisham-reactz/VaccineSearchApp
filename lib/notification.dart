@@ -34,20 +34,24 @@ Future<void> initz() async {
 
 Future<void> check() async {
   final scheduler = NeatPeriodicTaskScheduler(
-    interval: Duration(hours: 20),
+    interval: Duration(hours: 1),
     name: 'Vaccine Check',
     timeout: Duration(seconds: 5),
     task: () async {
+      // DateTime datenow = DateTime.now();
+      // while (datenow.hour > 18 && datenow.hour < 23) {
+      //some say they add data 6pm - 11pm }
       await fetchvcn(http.Client(), {
         'date': DateTime.now().day.toString() +
             '-' +
             DateTime.now().month.toString() +
             '-' +
             DateTime.now().year.toString(),
-        'pincode': '400092', //pincode supposed to be taken from local storage
+        'pincode': '400092', //pin to be replaced from local storage
       });
+
       if (stat) await _showNotification();
-    }, //pin to be replaced from local storage
+    },
     minCycle: Duration(minutes: 5),
   );
 
@@ -82,9 +86,10 @@ fetchvcn(http.Client client, args) async {
 
   var dataz = parsed['sessions'] as List;
 
-  dataz.forEach((element) {
-    if (element['available_capacity'] > 0) stat = true;
-  });
+  dynamic vaccinedata =
+      dataz.firstWhere((element) => element['available_capacity'] > 0);
+
+  if (vaccinedata != null && vaccinedata['available_capacity'] > 0) stat = true;
 
   return stat;
 }
