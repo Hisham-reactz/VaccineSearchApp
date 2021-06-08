@@ -38,15 +38,15 @@ Future<void> check() async {
     name: 'Vaccine Check',
     timeout: Duration(seconds: 5),
     task: () async {
-      // DateTime datenow = DateTime.now();
+      DateTime datenow = DateTime.now();
       // while (datenow.hour > 18 && datenow.hour < 23) {
       //some say they add data 6pm - 11pm }
       await fetchvcn(http.Client(), {
-        'date': DateTime.now().day.toString() +
+        'date': datenow.day.toString() +
             '-' +
-            DateTime.now().month.toString() +
+            datenow.month.toString() +
             '-' +
-            DateTime.now().year.toString(),
+            datenow.year.toString(),
         'pincode': '400092', //pin to be replaced from local storage
       });
 
