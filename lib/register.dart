@@ -8,8 +8,8 @@ import 'home.dart';
 import 'support.dart';
 import 'calendar.dart';
 import 'package:auto_size_text/auto_size_text.dart';
-import 'dart:async';
 import 'api.dart';
+import 'notification.dart';
 
 class RegisterPageWidget extends StatefulWidget {
   RegisterPageWidget({Key key}) : super(key: key);
@@ -41,6 +41,19 @@ Future<List> fetchDist(http.Client client, num id) async {
 
 class _RegisterPageWidgetState extends State<RegisterPageWidget> {
   final _formKey = GlobalKey<FormBuilderState>();
+
+  @override
+  void initState() {
+    super.initState();
+    requestPermissions();
+    initz();
+  }
+
+  @override
+  void dispose() {
+    selectNotificationSubject.close();
+    super.dispose();
+  }
 
   dynamic curstate;
   dynamic curdist;
