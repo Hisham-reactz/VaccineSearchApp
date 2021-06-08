@@ -40,7 +40,6 @@ Future<void> check() async {
     timeout: Duration(seconds: 15),
     task: () async {
       if (fetchvcn(http.Client(), {
-        'type': 'pincodecheck',
         'date': DateTime.now().day.toString() +
             '-' +
             DateTime.now().month.toString() +
@@ -99,13 +98,12 @@ fetchvcn(http.Client client, args) async {
 
   final response = await client.get(Uri.parse(urlz));
 
-  if (args["type"] == 'pincodecheck') {
-    final parsed = jsonDecode(response.body);
-    parsed["sessions"].map((json) => {
-          if (num.parse(json['available_capacity_dose1']).toInt() > 0)
-            {stat = true}
-        });
-  }
+  final parsed = jsonDecode(response.body);
+  parsed != null && parsed["sessions"] ??
+      parsed["sessions"].map((json) => {
+            if (num.parse(json['available_capacity_dose1']).toInt() > 0)
+              {stat = true}
+          });
 
 // Use the compute function to run parsePhotos in a separate isolate.
   return stat;
