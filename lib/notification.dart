@@ -58,15 +58,14 @@ Future<void> check() async {
 
 Future<void> _showNotification() async {
   const AndroidNotificationDetails androidPlatformChannelSpecifics =
-      AndroidNotificationDetails(
-          'your channel id', 'your channel name', 'your channel description',
+      AndroidNotificationDetails('1', 'vaccine', 'vaccine alert',
           importance: Importance.max,
           priority: Priority.high,
           ticker: 'ticker');
   const NotificationDetails platformChannelSpecifics =
       NotificationDetails(android: androidPlatformChannelSpecifics);
   await flutterLocalNotificationsPlugin.show(
-      0, 'plain title', 'plain body', platformChannelSpecifics,
+      0, 'Vaccine Alert', 'Vaccine Found @ 679322', platformChannelSpecifics,
       payload: 'item x');
 }
 
@@ -85,7 +84,5 @@ fetchvcn(http.Client client, args) async {
             if (num.parse(json['available_capacity_dose1']).toInt() > 0)
               {stat = true}
           });
-
-// Use the compute function to run parsePhotos in a separate isolate.
   return stat;
 }
