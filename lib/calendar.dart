@@ -23,11 +23,11 @@ class _CalendarWidgetState extends State<CalendarWidget> {
   List<bool> isSelected = [true, false];
   TextEditingController pinctrl;
   dynamic _caldata;
-  int valz;
+  dynamic valz;
   int stateid;
   int distid;
   int itemcount = 10;
-  ValueNotifier<List<dynamic>> _dayData;
+  ValueNotifier<dynamic> _dayData;
   List<dynamic> _sOptions = <dynamic>[];
   List<dynamic> _dOptions = <dynamic>[];
   @override
@@ -86,21 +86,22 @@ class _CalendarWidgetState extends State<CalendarWidget> {
     final responseJson = jsonDecode(response.body);
 
     setState(() {
-      _caldata = responseJson ?? [];
+      _caldata = responseJson['centers'] ?? [];
       _dayData = ValueNotifier(_getEventsForDay());
     });
 
     return responseJson ?? [];
   }
 
-  List<dynamic> getTemp() {
-    return [];
+  dynamic getTemp(caldatz) {
+    dynamic returndta = caldatz != null ? caldatz : [];
+    return returndta as dynamic;
   }
 
-  List<dynamic> _getEventsForDay() {
+  dynamic _getEventsForDay() {
 // Implementation example
 
-    dynamic returndata = _caldata != null ? _caldata['centers'] : [];
+    dynamic returndata = _caldata != null ? _caldata : [];
     setState(() {
       itemcount = returndata.length > 10 ? 10 : returndata.length;
     });
@@ -124,7 +125,7 @@ class _CalendarWidgetState extends State<CalendarWidget> {
     final responseJson = jsonDecode(response.body);
 
     setState(() {
-      _caldata = responseJson ?? [];
+      _caldata = responseJson['centers'] ?? [];
       _dayData = ValueNotifier(_getEventsForDay());
     });
 
@@ -135,10 +136,16 @@ class _CalendarWidgetState extends State<CalendarWidget> {
   Widget build(BuildContext context) {
     loadMore(value) {
       // print(value);
+
       setState(() {
-        (value - (itemcount + 10)) > 0
-            ? itemcount = itemcount + 10
-            : itemcount = value - 1;
+        if (value.length - (itemcount + 10) > 0) {
+          value = value.sublist(
+                  itemcount == 10 ? 0 : itemcount - 1, itemcount + 9) ??
+              [];
+          _dayData = ValueNotifier(getTemp(value));
+        } else {
+          itemcount = value.length;
+        }
       });
     }
 
@@ -179,7 +186,7 @@ class _CalendarWidgetState extends State<CalendarWidget> {
                               if (buttonIndex == index) {
                                 isSelected[buttonIndex] = true;
                                 _caldata = [];
-                                _dayData = ValueNotifier(getTemp());
+                                _dayData = ValueNotifier(getTemp(null));
                                 distid = null;
                                 stateid = null;
                                 pinctrl.clear();
@@ -299,16 +306,16 @@ class _CalendarWidgetState extends State<CalendarWidget> {
                     },
                   ),
                   _dayData != null
-                      ? ValueListenableBuilder<List<dynamic>>(
+                      ? ValueListenableBuilder<dynamic>(
                           valueListenable: _dayData,
                           builder: (context, dynamic value, _) {
-                            valz = value.length;
                             return ListView.builder(
                                 primary: false,
                                 scrollDirection: Axis.vertical,
                                 shrinkWrap: true,
                                 itemCount: itemcount,
                                 itemBuilder: (context, index) {
+                                  valz = value;
                                   return value != null && value.length > 0
                                       ? Column(
                                           children: [
