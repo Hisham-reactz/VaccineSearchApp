@@ -47,6 +47,7 @@ class _RegisterPageWidgetState extends State<RegisterPageWidget> {
     super.initState();
     requestPermissions();
     initz();
+    check();
   }
 
   @override
