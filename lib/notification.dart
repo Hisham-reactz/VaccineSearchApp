@@ -33,20 +33,20 @@ Future<void> initz() async {
 }
 
 Future<void> check() async {
-// Create a periodic task that prints 'Hello World' every 30s
   final scheduler = NeatPeriodicTaskScheduler(
-    interval: Duration(days: 1),
+    interval: Duration(hours: 20),
     name: 'Vaccine Check',
-    timeout: Duration(seconds: 15),
+    timeout: Duration(seconds: 5),
     task: () async {
-      if (fetchvcn(http.Client(), {
+      await fetchvcn(http.Client(), {
         'date': DateTime.now().day.toString() +
             '-' +
             DateTime.now().month.toString() +
             '-' +
             DateTime.now().year.toString(),
-        'pincode': '679322',
-      })) _showNotification();
+        'pincode': '400092', //pincode supposed to be taken from local storage
+      });
+      if (stat) await _showNotification();
     }, //pin to be replaced from local storage
     minCycle: Duration(minutes: 5),
   );
@@ -65,8 +65,8 @@ Future<void> _showNotification() async {
   const NotificationDetails platformChannelSpecifics =
       NotificationDetails(android: androidPlatformChannelSpecifics);
   await flutterLocalNotificationsPlugin.show(
-      0, 'Vaccine Alert', 'Vaccine Found @ 679322', platformChannelSpecifics,
-      payload: 'item x');
+      0, 'Vaccine Alert', 'Vaccine Found @ 400092', platformChannelSpecifics,
+      payload: 'Vaccine Check');
 }
 
 fetchvcn(http.Client client, args) async {
@@ -79,10 +79,12 @@ fetchvcn(http.Client client, args) async {
   final response = await client.get(Uri.parse(urlz));
 
   final parsed = jsonDecode(response.body);
-  parsed != null && parsed["sessions"] ??
-      parsed["sessions"].map((json) => {
-            if (num.parse(json['available_capacity_dose1']).toInt() > 0)
-              {stat = true}
-          });
+
+  var dataz = parsed['sessions'] as List;
+
+  dataz.forEach((element) {
+    if (element['available_capacity'] > 0) stat = true;
+  });
+
   return stat;
 }
