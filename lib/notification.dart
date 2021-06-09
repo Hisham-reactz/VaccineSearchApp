@@ -4,6 +4,7 @@ import 'package:neat_periodic_task/neat_periodic_task.dart';
 import 'dart:io';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
@@ -13,6 +14,7 @@ final BehaviorSubject<String> selectNotificationSubject =
     BehaviorSubject<String>();
 
 bool stat = false;
+int pincode;
 
 String selectedNotificationPayload;
 
@@ -32,6 +34,21 @@ Future<void> initz() async {
   });
 }
 
+getLocalPin() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  if (prefs.containsKey('pincode')) pincode = prefs.getInt('pincode');
+}
+
+clearLocalPin() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  if (prefs.containsKey('pincode')) prefs.remove('pincode');
+}
+
+setLocalPin(pin) async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  await prefs.setInt('pincode', pin);
+}
+
 Future<void> check() async {
   final scheduler = NeatPeriodicTaskScheduler(
     interval: Duration(hours: 1),
@@ -41,13 +58,16 @@ Future<void> check() async {
       DateTime datenow = DateTime.now();
       // while (datenow.hour > 18 && datenow.hour < 23) {
       //some say they add data 6pm - 11pm }
+      await getLocalPin();
       await fetchvcn(http.Client(), {
         'date': datenow.day.toString() +
             '-' +
             datenow.month.toString() +
             '-' +
             datenow.year.toString(),
-        'pincode': '400092', //pin to be replaced from local storage
+        'pincode': pincode != null
+            ? pincode
+            : '400092', //will get from loc data once g map module done;
       });
 
       if (stat) await _showNotification();
@@ -69,7 +89,10 @@ Future<void> _showNotification() async {
   const NotificationDetails platformChannelSpecifics =
       NotificationDetails(android: androidPlatformChannelSpecifics);
   await flutterLocalNotificationsPlugin.show(
-      0, 'Vaccine Alert', 'Vaccine Found @ 400092', platformChannelSpecifics,
+      0,
+      'Vaccine Alert',
+      'Vaccine Found @ ' + pincode.toString() != 'null' ? pincode : '400092',
+      platformChannelSpecifics,
       payload: 'Vaccine Check');
 }
 
@@ -86,8 +109,9 @@ fetchvcn(http.Client client, args) async {
 
   var dataz = parsed['sessions'] as List;
 
-  dynamic vaccinedata =
-      dataz.firstWhere((element) => element['available_capacity'] > 0);
+  dynamic vaccinedata = dataz != null
+      ? dataz.firstWhere((element) => element['available_capacity'] > 0)
+      : null;
 
   if (vaccinedata != null && vaccinedata['available_capacity'] > 0) stat = true;
 

@@ -11,30 +11,23 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'api.dart';
 import 'notification.dart';
 
-class RegisterPageWidget extends StatefulWidget {
-  RegisterPageWidget({Key key}) : super(key: key);
-
-  @override
-  _RegisterPageWidgetState createState() => _RegisterPageWidgetState();
-}
-
 Future<List> fetchStates(http.Client client) async {
   final response = await client
       .get(Uri.parse('https://cdn-api.co-vin.in/api/v2/admin/location/states'));
 
-// Use the compute function to run parsePhotos in a separate isolate.
+  // Use the compute function to run parsePhotos in a separate isolate.
 
   return compute(parseStates, response.body);
 }
 
 Future<List> fetchDist(http.Client client, num id) async {
-// print(id);
+  // print(id);
   final response = await client.get(Uri.parse(
       'https://cdn-api.co-vin.in/api/v2/admin/location/districts/' +
           id.toString()));
 
-// Use the compute function to run parsePhotos in a separate isolate.
-// print(response.body);
+  // Use the compute function to run parsePhotos in a separate isolate.
+  // print(response.body);
 
   return compute(parseDistricts, response.body);
 }
@@ -46,6 +39,50 @@ class _RegisterPageWidgetState extends State<RegisterPageWidget> {
   dynamic curdist;
   dynamic curdate;
 
+  getSnack(msg) {
+    final snackBar = SnackBar(content: Text(msg));
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
+
+  Future<void> _alertReg(__context) async {
+    await getLocalPin();
+    if (pincode == null)
+      switch (await showDialog<dynamic>(
+          context: __context,
+          builder: (BuildContext context) {
+            return SimpleDialog(
+              title: const Text(
+                'Register pincode based vaccine alert',
+                textAlign: TextAlign.center,
+              ),
+              children: <Widget>[
+                Container(
+                  padding: EdgeInsets.all(13),
+                  child: TextField(
+                    onSubmitted: (pinz) async {
+                      if (pinz.trim() != '' && pinz.trim().length == 6) {
+                        await setLocalPin(num.parse(pinz).toInt());
+                        Navigator.pop(context);
+                        getSnack('Vaccine alert registered @ ' + pinz);
+                      }
+                    },
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(50))),
+                      labelText: 'PinCode',
+                    ),
+                  ),
+                )
+              ],
+            );
+          })) {
+        case null:
+          // dialog dismissed
+          break;
+      }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -56,6 +93,7 @@ class _RegisterPageWidgetState extends State<RegisterPageWidget> {
         datenow.year.toString();
     initz();
     check();
+    _alertReg(context);
   }
 
   @override
@@ -190,12 +228,12 @@ class _RegisterPageWidgetState extends State<RegisterPageWidget> {
                   ),
                   child: InkWell(
                     onTap: () async {
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => SupportWidget(),
-                        ),
-                      );
+                      // await Navigator.push(
+                      //   context,
+                      //   MaterialPageRoute(
+                      //     builder: (context) => SupportWidget(),
+                      //   ),
+                      // );
                     },
                     child: Card(
                       clipBehavior: Clip.antiAliasWithSaveLayer,
@@ -596,7 +634,7 @@ class _RegisterPageWidgetState extends State<RegisterPageWidget> {
                       child: MaterialButton(
                         color: Theme.of(context).accentColor,
                         child: Text(
-                          "Submit",
+                          "Search",
                           style: TextStyle(color: Colors.white),
                         ),
                         onPressed: () async {
@@ -639,6 +677,7 @@ class _RegisterPageWidgetState extends State<RegisterPageWidget> {
                         ),
                         onPressed: () {
                           _formKey.currentState.reset();
+                          clearLocalPin();
                           setState(() {
                             curdate = datenow.day.toString() +
                                 '-' +
@@ -656,4 +695,11 @@ class _RegisterPageWidgetState extends State<RegisterPageWidget> {
               ],
             )));
   }
+}
+
+class RegisterPageWidget extends StatefulWidget {
+  RegisterPageWidget({Key key}) : super(key: key);
+
+  @override
+  _RegisterPageWidgetState createState() => _RegisterPageWidgetState();
 }
