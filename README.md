@@ -1,3 +1,3 @@
 # vaccinator
 
-Vaccine search app
+Vaccine search app (India)
