@@ -56,14 +56,14 @@ Future<void> check() async {
     timeout: Duration(seconds: 5),
     task: () async {
       DateTime datenow = DateTime.now();
-      // while (datenow.hour > 18 && datenow.hour < 23) {
-      //some say they add data 6pm - 11pm }
+// while (datenow.hour > 18 && datenow.hour < 23) {
+//some say they add data 6pm - 11pm }
       pincode = null;
       await getLocalPin();
       print(pincode);
       stat = false;
       await fetchvcn(http.Client(), {
-        'date': (datenow.day + 1).toString() +
+        'date': datenow.day.toString() +
             '-' +
             datenow.month.toString() +
             '-' +
@@ -104,7 +104,7 @@ Future<void> check() async {
 
 fetchvcn(http.Client client, args) async {
   dynamic urlz =
-      'https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/findByPin?date=' +
+      'https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByPin?date=' +
           args["date"] +
           '&pincode=' +
           args["pincode"].toString();
@@ -113,13 +113,16 @@ fetchvcn(http.Client client, args) async {
 
   final parsed = jsonDecode(response.body);
 
-  var dataz = parsed['sessions'] as List;
+  var dataz = parsed['centers'] as List;
 
-  dynamic vaccinedata = dataz != null
-      ? dataz.firstWhere((element) => element['available_capacity'] > 0)
-      : null;
-
-  if (vaccinedata != null && vaccinedata['available_capacity'] > 0) stat = true;
+  for (var center in dataz) {
+    for (var session in center['sessions']) {
+      if (session['available_capacity'] > 0) {
+        stat = true;
+        return stat;
+      }
+    }
+  }
 
   return stat;
 }
