@@ -65,9 +65,7 @@ Future<void> check() async {
             datenow.month.toString() +
             '-' +
             datenow.year.toString(),
-        'pincode': pincode != null
-            ? pincode
-            : '400092', //will get from loc data once g map module done;
+        'pincode': pincode != null ? pincode.toString() : '',
       });
 
       if (stat) await _showNotification();
@@ -91,7 +89,9 @@ Future<void> _showNotification() async {
   await flutterLocalNotificationsPlugin.show(
       0,
       'Vaccine Alert',
-      'Vaccine Found @ ' + pincode.toString() != 'null' ? pincode : '400092',
+      'Vaccine Found @ ' + pincode.toString() != 'null'
+          ? pincode.toString()
+          : '',
       platformChannelSpecifics,
       payload: 'Vaccine Check');
 }

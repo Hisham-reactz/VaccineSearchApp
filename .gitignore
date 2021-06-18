@@ -44,4 +44,6 @@ app.*.map.json
 /android/app/debug
 /android/app/build
 /android/app/profile
+/android/app/footy_key.jks
+/android/key.properties
 /android/app/release
