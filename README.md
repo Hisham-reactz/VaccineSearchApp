@@ -1,5 +1,3 @@
 # vaccinator
 
-Vaccine search app
-
-## Getting Started
+Vaccine search app (India , region locked api)
