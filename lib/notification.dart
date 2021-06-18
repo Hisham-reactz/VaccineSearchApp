@@ -15,7 +15,7 @@ final BehaviorSubject<String> selectNotificationSubject =
 
 bool stat = false;
 int pincode;
-
+int iz = 0;
 String selectedNotificationPayload;
 
 Future<void> initz() async {
@@ -51,24 +51,48 @@ setLocalPin(pin) async {
 
 Future<void> check() async {
   final scheduler = NeatPeriodicTaskScheduler(
-    interval: Duration(hours: 1),
+    interval: Duration(minutes: 30),
     name: 'Vaccine Check',
     timeout: Duration(seconds: 5),
     task: () async {
       DateTime datenow = DateTime.now();
       // while (datenow.hour > 18 && datenow.hour < 23) {
       //some say they add data 6pm - 11pm }
+      pincode = null;
       await getLocalPin();
+      print(pincode);
+      stat = false;
       await fetchvcn(http.Client(), {
         'date': datenow.day.toString() +
             '-' +
             datenow.month.toString() +
             '-' +
             datenow.year.toString(),
-        'pincode': pincode.toString() != 'null' ? pincode.toString() : '',
+        'pincode': pincode.toString() != 'null'
+            ? pincode.toString()
+            : '676106', //will get from loc data once g map module done;
       });
+      print(stat);
+      if (stat) {
+        iz++;
+        AndroidNotificationDetails androidPlatformChannelSpecifics =
+            AndroidNotificationDetails(
+                iz.toString(), 'vaccine', 'vaccine alert',
+                importance: Importance.max,
+                priority: Priority.high,
+                ticker: 'ticker ' + iz.toString());
+        NotificationDetails platformChannelSpecifics =
+            NotificationDetails(android: androidPlatformChannelSpecifics);
 
-      if (stat) await _showNotification();
+        await flutterLocalNotificationsPlugin.show(
+            iz,
+            'Vaccine Alert ' + iz.toString(),
+            'Vaccine Found @ ' + pincode.toString() != 'null'
+                ? pincode.toString()
+                : '676106',
+            platformChannelSpecifics,
+            payload: 'Vaccine Check ' + iz.toString());
+      }
     },
     minCycle: Duration(minutes: 5),
   );
@@ -76,24 +100,6 @@ Future<void> check() async {
   scheduler.start();
   await ProcessSignal.sigterm.watch().first;
   await scheduler.stop();
-}
-
-Future<void> _showNotification() async {
-  const AndroidNotificationDetails androidPlatformChannelSpecifics =
-      AndroidNotificationDetails('1', 'vaccine', 'vaccine alert',
-          importance: Importance.max,
-          priority: Priority.high,
-          ticker: 'ticker');
-  const NotificationDetails platformChannelSpecifics =
-      NotificationDetails(android: androidPlatformChannelSpecifics);
-  await flutterLocalNotificationsPlugin.show(
-      0,
-      'Vaccine Alert',
-      'Vaccine Found @ ' + pincode.toString() != 'null'
-          ? pincode.toString()
-          : '',
-      platformChannelSpecifics,
-      payload: 'Vaccine Check');
 }
 
 fetchvcn(http.Client client, args) async {
