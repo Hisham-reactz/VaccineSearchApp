@@ -51,7 +51,7 @@ setLocalPin(pin) async {
 
 Future<void> check() async {
   final scheduler = NeatPeriodicTaskScheduler(
-    interval: Duration(minutes: 30),
+    interval: Duration(minutes: 15),
     name: 'Vaccine Check',
     timeout: Duration(seconds: 5),
     task: () async {
@@ -63,14 +63,14 @@ Future<void> check() async {
       print(pincode);
       stat = false;
       await fetchvcn(http.Client(), {
-        'date': datenow.day.toString() +
+        'date': (datenow.day + 1).toString() +
             '-' +
             datenow.month.toString() +
             '-' +
             datenow.year.toString(),
         'pincode': pincode.toString() != 'null'
             ? pincode.toString()
-            : '676106', //will get from loc data once g map module done;
+            : '', //will get from loc data once g map module done;
       });
       print(stat);
       if (stat) {
@@ -89,7 +89,7 @@ Future<void> check() async {
             'Vaccine Alert ' + iz.toString(),
             'Vaccine Found @ ' + pincode.toString() != 'null'
                 ? pincode.toString()
-                : '676106',
+                : '',
             platformChannelSpecifics,
             payload: 'Vaccine Check ' + iz.toString());
       }

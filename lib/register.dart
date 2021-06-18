@@ -11,6 +11,7 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'api.dart';
 import 'notification.dart';
 
+dynamic curstate;
 Future<List> fetchStates(http.Client client) async {
   final response = await client
       .get(Uri.parse('https://cdn-api.co-vin.in/api/v2/admin/location/states'));
@@ -32,75 +33,63 @@ Future<List> fetchDist(http.Client client, num id) async {
   return compute(parseDistricts, response.body);
 }
 
+getSnack(msg, context) {
+  final snackBar = SnackBar(content: Text(msg));
+  ScaffoldMessenger.of(context).showSnackBar(snackBar);
+}
+
+Future<void> _alertReg(__context) async {
+  await getLocalPin();
+  if (pincode == null)
+    switch (await showDialog<dynamic>(
+        context: __context,
+        builder: (BuildContext context) {
+          return SimpleDialog(
+            title: const Text(
+              'Register pincode based vaccine alert',
+              textAlign: TextAlign.center,
+            ),
+            children: <Widget>[
+              Container(
+                padding: EdgeInsets.all(13),
+                child: TextField(
+                  onSubmitted: (pinz) async {
+                    if (pinz.trim() != '' && pinz.trim().length == 6) {
+                      await setLocalPin(num.parse(pinz).toInt());
+                      Navigator.pop(context);
+                      getSnack('Vaccine alert registered @ ' + pinz, context);
+                    }
+                  },
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(50))),
+                    labelText: 'PinCode',
+                  ),
+                ),
+              )
+            ],
+          );
+        })) {
+      case null:
+        // dialog dismissed
+        break;
+    }
+}
+
 class _RegisterPageWidgetState extends State<RegisterPageWidget> {
+  @override
+  void initState() {
+    super.initState();
+
+    _alertReg(context);
+  }
+
   final _formKey = GlobalKey<FormBuilderState>();
   DateTime datenow = DateTime.now();
   dynamic curstate;
   dynamic curdist;
   dynamic curdate;
-
-  getSnack(msg) {
-    final snackBar = SnackBar(content: Text(msg));
-    ScaffoldMessenger.of(context).showSnackBar(snackBar);
-  }
-
-  Future<void> _alertReg(__context) async {
-    await getLocalPin();
-    if (pincode == null)
-      switch (await showDialog<dynamic>(
-          context: __context,
-          builder: (BuildContext context) {
-            return SimpleDialog(
-              title: const Text(
-                'Register pincode based vaccine alert',
-                textAlign: TextAlign.center,
-              ),
-              children: <Widget>[
-                Container(
-                  padding: EdgeInsets.all(13),
-                  child: TextField(
-                    onSubmitted: (pinz) async {
-                      if (pinz.trim() != '' && pinz.trim().length == 6) {
-                        await setLocalPin(num.parse(pinz).toInt());
-                        Navigator.pop(context);
-                        getSnack('Vaccine alert registered @ ' + pinz);
-                      }
-                    },
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(50))),
-                      labelText: 'PinCode',
-                    ),
-                  ),
-                )
-              ],
-            );
-          })) {
-        case null:
-          // dialog dismissed
-          break;
-      }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    curdate = datenow.day.toString() +
-        '-' +
-        datenow.month.toString() +
-        '-' +
-        datenow.year.toString();
-    initz();
-    check();
-    _alertReg(context);
-  }
-
-  @override
-  void dispose() {
-    selectNotificationSubject.close();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
