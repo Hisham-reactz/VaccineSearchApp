@@ -65,7 +65,7 @@ Future<void> check() async {
             datenow.month.toString() +
             '-' +
             datenow.year.toString(),
-        'pincode': pincode != null ? pincode.toString() : '',
+        'pincode': pincode.toString() != 'null' ? pincode.toString() : '',
       });
 
       if (stat) await _showNotification();
