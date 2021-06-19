@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -10,25 +12,26 @@ import 'calendar.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'api.dart';
 import 'notification.dart';
+import 'package:intl/intl.dart';
 
 dynamic curstate;
 Future<List> fetchStates(http.Client client) async {
   final response = await client
       .get(Uri.parse('https://cdn-api.co-vin.in/api/v2/admin/location/states'));
 
-  // Use the compute function to run parsePhotos in a separate isolate.
+// Use the compute function to run parsePhotos in a separate isolate.
 
   return compute(parseStates, response.body);
 }
 
 Future<List> fetchDist(http.Client client, num id) async {
-  // print(id);
+// print(id);
   final response = await client.get(Uri.parse(
       'https://cdn-api.co-vin.in/api/v2/admin/location/districts/' +
           id.toString()));
 
-  // Use the compute function to run parsePhotos in a separate isolate.
-  // print(response.body);
+// Use the compute function to run parsePhotos in a separate isolate.
+// print(response.body);
 
   return compute(parseDistricts, response.body);
 }
@@ -72,17 +75,31 @@ Future<void> _alertReg(__context) async {
           );
         })) {
       case null:
-        // dialog dismissed
+// dialog dismissed
         break;
     }
 }
 
 class _RegisterPageWidgetState extends State<RegisterPageWidget> {
+  bool isInit = false;
+  Timer tmr;
   @override
   void initState() {
     super.initState();
 
+    tmr = Timer.periodic(new Duration(seconds: 5), (timer) {
+      setState(() {
+        isInit = !isInit;
+      });
+    });
+
     _alertReg(context);
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    tmr.cancel();
   }
 
   final _formKey = GlobalKey<FormBuilderState>();
@@ -90,6 +107,9 @@ class _RegisterPageWidgetState extends State<RegisterPageWidget> {
   dynamic curstate;
   dynamic curdist;
   dynamic curdate;
+  String today = DateFormat('MMM-dd-yyyy – hh:mm a')
+      .format(DateTime.now().toLocal())
+      .toString();
 
   @override
   Widget build(BuildContext context) {
@@ -98,15 +118,49 @@ class _RegisterPageWidgetState extends State<RegisterPageWidget> {
           elevation: 16,
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              Center(
+                child: ClipPath(
+                  child: Container(
+                    child: Center(
+                        child: AnimatedDefaultTextStyle(
+                            style: isInit
+                                ? TextStyle(
+                                    fontSize: 37.0,
+                                    color: Colors.red,
+                                    fontWeight: FontWeight.w300)
+                                : TextStyle(
+                                    fontSize: 27.0,
+                                    color: Colors.black,
+                                    fontWeight: FontWeight.w100),
+                            duration: const Duration(seconds: 4),
+                            child:
+                                isInit ? Text("Corona Go") : Text("Go Corona"),
+                            curve: Curves.elasticInOut)),
+                    decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                      stops: [
+                        0.1,
+                        0.9,
+                      ],
+                      colors: [
+                        Colors.indigo,
+                        Colors.teal,
+                      ],
+                    )),
+                    width: MediaQuery.of(context).size.width,
+                    height: 200,
+                  ),
+                  clipper: MyCustomClipper(),
+                ),
+              ),
               Row(
                 mainAxisSize: MainAxisSize.max,
                 children: [
                   Padding(
                     padding: EdgeInsets.fromLTRB(20, 16, 0, 0),
                     child: Text(
-                      'December 19, 2020',
+                      today,
                       style: TextStyle(
                         fontFamily: 'Montserrat',
                         color: Color(0xFF8B97A2),
@@ -162,7 +216,7 @@ class _RegisterPageWidgetState extends State<RegisterPageWidget> {
                                 Align(
                                   alignment: Alignment(2.64, 0.55),
                                   child: AutoSizeText(
-                                    'Dec. 19, 1:30pm - 2:00pm',
+                                    today,
                                     style: TextStyle(
                                       fontFamily: 'Montserrat',
                                       color: Color(0xFF8B97A2),
@@ -216,14 +270,7 @@ class _RegisterPageWidgetState extends State<RegisterPageWidget> {
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: InkWell(
-                    onTap: () async {
-                      // await Navigator.push(
-                      //   context,
-                      //   MaterialPageRoute(
-                      //     builder: (context) => SupportWidget(),
-                      //   ),
-                      // );
-                    },
+                    onTap: () async {},
                     child: Card(
                       clipBehavior: Clip.antiAliasWithSaveLayer,
                       color: Colors.white,
@@ -253,7 +300,7 @@ class _RegisterPageWidgetState extends State<RegisterPageWidget> {
                                 Align(
                                   alignment: Alignment(2.64, 0.55),
                                   child: AutoSizeText(
-                                    'Dec. 19, 1:30pm - 2:00pm',
+                                    today,
                                     style: TextStyle(
                                       fontFamily: 'Montserrat',
                                       color: Color(0xFF8B97A2),
@@ -344,7 +391,7 @@ class _RegisterPageWidgetState extends State<RegisterPageWidget> {
                                 Align(
                                   alignment: Alignment(2.64, 0.55),
                                   child: AutoSizeText(
-                                    'Dec. 19, 1:30pm - 2:00pm',
+                                    today,
                                     style: TextStyle(
                                       fontFamily: 'Montserrat',
                                       color: Color(0xFF8B97A2),
@@ -495,7 +542,6 @@ class _RegisterPageWidgetState extends State<RegisterPageWidget> {
                                       ?.validate();
                                 });
                               },
-                              // valueTransformer: (text) => num.tryParse(text),
                               validator: FormBuilderValidators.compose(_formKey
                                               .currentState !=
                                           null &&
@@ -572,13 +618,11 @@ class _RegisterPageWidgetState extends State<RegisterPageWidget> {
                       FormBuilderDateTimePicker(
                         name: 'date',
                         initialValue: datenow,
-                        // onChanged: _onChanged,
                         inputType: InputType.date,
                         decoration: InputDecoration(
                           labelText: 'Date',
                         ),
                         onChanged: (val) {
-                          // print(val);
                           setState(() {
                             val != null
                                 ? curdate = val.day.toString() +
@@ -587,13 +631,11 @@ class _RegisterPageWidgetState extends State<RegisterPageWidget> {
                                     '-' +
                                     val.year.toString()
                                 : '';
-                            // print(curdate);
+
                             _formKey.currentState?.fields['date']?.validate();
                           });
                         },
                         initialTime: TimeOfDay(hour: 8, minute: 0),
-                        // initialValue: DateTime.now(),
-                        // enabled: true,
                       ),
                       FormBuilderCheckbox(
                         name: 'store',
@@ -620,67 +662,70 @@ class _RegisterPageWidgetState extends State<RegisterPageWidget> {
                 Row(
                   children: <Widget>[
                     Expanded(
-                      child: MaterialButton(
-                        color: Theme.of(context).accentColor,
-                        child: Text(
-                          "Search",
-                          style: TextStyle(color: Colors.white),
-                        ),
-                        onPressed: () async {
-                          _formKey.currentState.save();
-                          if (_formKey.currentState.validate()) {
-                            // print(_formKey.currentState.value);
-                            await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  settings: RouteSettings(
-                                    arguments: {
-                                      "type": _formKey
-                                          .currentState?.fields['type'].value,
-                                      "date": curdate,
-                                      if (_formKey.currentState?.fields['type']
-                                              .value ==
-                                          'pincode')
-                                        "pincode": _formKey.currentState
-                                            ?.fields['pincode'].value,
-                                      "district_id": curdist != null
-                                          ? curdist.districtid
-                                          : 0,
-                                    },
-                                  ),
-                                  builder: (context) => HomePageWidget()),
-                            );
-                          } else {
-                            print("validation failed");
-                          }
-                        },
-                      ),
+                      child: ClipRRect(
+                          borderRadius: BorderRadius.circular(15),
+                          child: MaterialButton(
+                            color: Theme.of(context).accentColor,
+                            child: Text(
+                              "Search",
+                              style: TextStyle(color: Colors.white),
+                            ),
+                            onPressed: () async {
+                              _formKey.currentState.save();
+                              if (_formKey.currentState.validate()) {
+                                await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      settings: RouteSettings(
+                                        arguments: {
+                                          "type": _formKey.currentState
+                                              ?.fields['type'].value,
+                                          "date": curdate,
+                                          if (_formKey.currentState
+                                                  ?.fields['type'].value ==
+                                              'pincode')
+                                            "pincode": _formKey.currentState
+                                                ?.fields['pincode'].value,
+                                          "district_id": curdist != null
+                                              ? curdist.districtid
+                                              : 0,
+                                        },
+                                      ),
+                                      builder: (context) => HomePageWidget()),
+                                );
+                              } else {
+                                print("validation failed");
+                              }
+                            },
+                          )),
                     ),
                     SizedBox(width: 20),
                     Expanded(
-                      child: MaterialButton(
-                        color: Theme.of(context).accentColor,
-                        child: Text(
-                          "Reset",
-                          style: TextStyle(color: Colors.white),
-                        ),
-                        onPressed: () {
-                          _formKey.currentState.reset();
-                          clearLocalPin();
-                          setState(() {
-                            curdate = datenow.day.toString() +
-                                '-' +
-                                datenow.month.toString() +
-                                '-' +
-                                datenow.year.toString();
-                            curdist = null;
-                            curstate = null;
-                          });
-                        },
-                      ),
+                      child: ClipRRect(
+                          borderRadius: BorderRadius.circular(15),
+                          child: MaterialButton(
+                            color: Theme.of(context).accentColor,
+                            child: Text(
+                              "Reset",
+                              style: TextStyle(color: Colors.white),
+                            ),
+                            onPressed: () {
+                              _formKey.currentState.reset();
+                              clearLocalPin();
+                              setState(() {
+                                curdate = datenow.day.toString() +
+                                    '-' +
+                                    datenow.month.toString() +
+                                    '-' +
+                                    datenow.year.toString();
+                                curdist = null;
+                                curstate = null;
+                              });
+                            },
+                          )),
                     ),
                   ],
-                )
+                ),
               ],
             )));
   }
@@ -691,4 +736,23 @@ class RegisterPageWidget extends StatefulWidget {
 
   @override
   _RegisterPageWidgetState createState() => _RegisterPageWidgetState();
+}
+
+class MyCustomClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    Path path = Path();
+    path.lineTo(0, size.height);
+    path.quadraticBezierTo(
+        size.width / 4, size.height - 40, size.width / 2, size.height - 20);
+    path.quadraticBezierTo(
+        3 / 4 * size.width, size.height, size.width, size.height - 30);
+    path.lineTo(size.width, 0);
+    path.close();
+
+    return path;
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
 }
