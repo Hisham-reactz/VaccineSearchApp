@@ -9,6 +9,7 @@ import 'package:http/http.dart' as http;
 import 'home.dart';
 import 'support.dart';
 import 'calendar.dart';
+import 'map.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'api.dart';
 import 'notification.dart';
@@ -127,7 +128,7 @@ class _RegisterPageWidgetState extends State<RegisterPageWidget> {
                             style: isInit
                                 ? TextStyle(
                                     fontSize: 37.0,
-                                    color: Colors.red,
+                                    color: Colors.blue,
                                     fontWeight: FontWeight.w300)
                                 : TextStyle(
                                     fontSize: 27.0,
@@ -270,7 +271,14 @@ class _RegisterPageWidgetState extends State<RegisterPageWidget> {
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: InkWell(
-                    onTap: () async {},
+                    onTap: () async {
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => MapBox(),
+                        ),
+                      );
+                    },
                     child: Card(
                       clipBehavior: Clip.antiAliasWithSaveLayer,
                       color: Colors.white,
