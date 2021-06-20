@@ -29,6 +29,7 @@ class FullMapState extends State<FullMap> {
   MapboxMapController mapController;
   dynamic userlocate;
   dynamic camloc;
+  Symbol _selectedSymbol;
 
   @override
   void initState() {
@@ -70,8 +71,28 @@ class FullMapState extends State<FullMap> {
     }
   }
 
+  void _onSymbolTapped(Symbol symbol) {
+    if (_selectedSymbol != null) {
+      _updateSelectedSymbol(
+        const SymbolOptions(
+            iconSize: 0.07, iconRotate: 00.00, iconOpacity: 0.7),
+      );
+    }
+    setState(() {
+      _selectedSymbol = symbol;
+    });
+    _updateSelectedSymbol(
+      SymbolOptions(iconSize: 0.1, iconRotate: 25.00, iconOpacity: 1),
+    );
+  }
+
+  void _updateSelectedSymbol(SymbolOptions changes) {
+    mapController.updateSymbol(_selectedSymbol, changes);
+  }
+
   void _onMapCreated(MapboxMapController controller) {
     mapController = controller;
+    mapController.onSymbolTapped.add(_onSymbolTapped);
   }
 
   void onUserLocationUpdated(UserLocation loc) {}
@@ -87,6 +108,7 @@ class FullMapState extends State<FullMap> {
   @override
   void dispose() {
     if (mapController != null) {
+      mapController.onSymbolTapped.remove(_onSymbolTapped);
       mapController.removeListener(_onMapChanged);
       mapController.dispose();
     }
@@ -97,7 +119,7 @@ class FullMapState extends State<FullMap> {
 
   void _addMarker(Point<double> point, LatLng coordinates) {
     mapController.addSymbol(SymbolOptions(
-      iconSize: 0.05,
+      iconSize: 0.07,
       iconImage: 'hospital-svgrepo-com',
       geometry: LatLng(
         coordinates.latitude,
@@ -142,8 +164,8 @@ class FullMapState extends State<FullMap> {
                     Navigator.pop(context);
                   }
                 : () {
+                    mapController.clearSymbols();
                     mapController.removeListener(_onMapChanged);
-                    mapController.dispose();
                     Navigator.pop(context);
                   },
           ),
