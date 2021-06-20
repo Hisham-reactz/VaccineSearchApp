@@ -9,7 +9,7 @@ import 'package:http/http.dart' as http;
 import 'home.dart';
 import 'support.dart';
 import 'calendar.dart';
-import 'map.dart';
+import 'mapbox.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'api.dart';
 import 'notification.dart';
@@ -275,7 +275,7 @@ class _RegisterPageWidgetState extends State<RegisterPageWidget> {
                       await Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => MapBox(),
+                          builder: (context) => FullMapPage(),
                         ),
                       );
                     },

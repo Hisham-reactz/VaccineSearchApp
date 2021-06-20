@@ -114,12 +114,13 @@ fetchvcn(http.Client client, args) async {
   final parsed = jsonDecode(response.body);
 
   var dataz = parsed['centers'] as List;
-
-  for (var center in dataz) {
-    for (var session in center['sessions']) {
-      if (session['available_capacity'] > 0) {
-        stat = true;
-        return stat;
+  if (dataz != null) {
+    for (var center in dataz) {
+      for (var session in center['sessions']) {
+        if (session['available_capacity'] > 0) {
+          stat = true;
+          return stat;
+        }
       }
     }
   }

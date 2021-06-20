@@ -26,6 +26,8 @@ dependencies:
   rxdart:
   shared_preferences: ^2.0.6
   mapbox_search: ^2.1.0+1
+  mapbox_gl: ^0.12.0
+  location: ^4.3.0
   # google_mobile_ads: ^0.13.0
   # pay: ^1.0.4
 

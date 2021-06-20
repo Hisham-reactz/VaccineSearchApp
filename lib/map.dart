@@ -8,20 +8,6 @@ import 'src/clr.dart';
 const kApiKey =
     'pk.eyJ1IjoibmlqZWZvNTU1MSIsImEiOiJja3EzbHgzZXExMDI5MndrMTdxdmR1Nm5kIn0.G4JDtJ1612Ofw7VTRkP8jA';
 
-class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: MapBox(),
-    );
-  }
-}
-
 class MapBox extends StatefulWidget {
   MapBox({Key key}) : super(key: key);
 

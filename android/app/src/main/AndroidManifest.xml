@@ -29,6 +29,7 @@
               android:name="io.flutter.embedding.android.SplashScreenDrawable"
               android:resource="@drawable/launch_background"
               />
+            <meta-data android:name="com.mapbox.token" android:value="sk.eyJ1IjoibmlqZWZvNTU1MSIsImEiOiJja3E0d2s5NTkxY2ttMm5wOGpraDc4czl5In0.70XKI_-bkATf2jDEPVuxBA" />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
@@ -41,4 +42,6 @@
             android:value="2" />
     </application>
     <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 </manifest>
