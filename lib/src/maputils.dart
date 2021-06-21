@@ -5,13 +5,13 @@ import 'package:mapbox_gl/mapbox_gl.dart';
 const ApiKey =
     'pk.eyJ1IjoibmlqZWZvNTU1MSIsImEiOiJja3EzbHgzZXExMDI5MndrMTdxdmR1Nm5kIn0.G4JDtJ1612Ofw7VTRkP8jA';
 
-setCords(cords, mapController) async {
-// print(cords);
+List<SymbolOptions> symbolz = [];
 
+Future setCords(cords, mapController) async {
   await animateLoc(cords, mapController, 1);
 }
 
-animateLoc(cords, ctrl, type) async {
+Future animateLoc(cords, ctrl, type) async {
   type == 1
       ? await ctrl.animateCamera(CameraUpdate.newLatLng(
           LatLng(cords[1], cords[0]),
@@ -41,3 +41,19 @@ void updateSelectedSymbol(SymbolOptions changes, ctrl, _selectedSymbol) async {
 }
 
 void onUserLocationUpdated(UserLocation loc) async {}
+void onStyleLoadedCallback() {}
+
+Future markerLoop(centers) async {
+  await for (var center in centers) {
+    symbolz.add(SymbolOptions(
+      iconSize: 0.07,
+      iconOpacity: 0.5,
+      iconImage: 'hospital-svgrepo-com',
+      geometry: LatLng(
+        num.parse(center['lat']).toDouble(),
+        num.parse(center['long']).toDouble(),
+      ),
+    ));
+  }
+  return [];
+}

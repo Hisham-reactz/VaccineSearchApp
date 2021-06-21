@@ -12,7 +12,6 @@ class FullMapPage extends ExamplePage {
 
   @override
   Widget build(BuildContext context) {
-    WidgetsFlutterBinding.ensureInitialized();
     return const FullMap();
   }
 }
@@ -31,13 +30,7 @@ class FullMapState extends State<FullMap> {
   Symbol _selectedSymbol;
   dynamic centers;
 
-  @override
-  void initState() {
-    super.initState();
-    WidgetsFlutterBinding.ensureInitialized();
-  }
-
-  userlocation() async {
+  Future userlocation() async {
     if (userlocate == null) {
       final location = Location();
       final hasPermissions = await location.hasPermission();
@@ -54,7 +47,6 @@ class FullMapState extends State<FullMap> {
         userlocate = userlocate;
       });
       await fetchCentersByLatLng(userlocate);
-// print([userlocate.latitude, userlocate.longitude]);
     }
   }
 
@@ -99,8 +91,33 @@ class FullMapState extends State<FullMap> {
       if (distance > 5) {
         await fetchCentersByLatLng(camloc);
       }
-// print(camloc);
     }
+  }
+
+  Future fetchCentersByLatLng(latlng) async {
+    final response = await http.get(Uri.parse(
+        'https://cdn-api.co-vin.in/api/v2/appointment/centers/public/findByLatLong?lat=' +
+            latlng.latitude.toString() +
+            '&' +
+            'long=' +
+            latlng.longitude.toString()));
+
+    final responseJson = await jsonDecode(response.body);
+
+    setState(() {
+      centers = responseJson['centers'] as List ?? [];
+    });
+
+    await markerLoop(centers);
+
+    addMarker(symbolz, mapController);
+
+    return responseJson ?? [];
+  }
+
+  @override
+  void initState() {
+    super.initState();
   }
 
   @override
@@ -113,49 +130,14 @@ class FullMapState extends State<FullMap> {
     super.dispose();
   }
 
-  fetchCentersByLatLng(latlng) async {
-    final response = await http.get(Uri.parse(
-        'https://cdn-api.co-vin.in/api/v2/appointment/centers/public/findByLatLong?lat=' +
-            latlng.latitude.toString() +
-            '&' +
-            'long=' +
-            latlng.longitude.toString()));
-
-    final responseJson = jsonDecode(response.body);
-
-// log(response.body);
-
-    setState(() {
-      centers = responseJson['centers'] as List ?? [];
-    });
-
-    List<SymbolOptions> symbolz = [];
-
-    for (var center in centers) {
-      symbolz.add(SymbolOptions(
-        iconSize: 0.07,
-        iconOpacity: 0.5,
-        iconImage: 'hospital-svgrepo-com',
-        geometry: LatLng(
-          num.parse(center['lat']).toDouble(),
-          num.parse(center['long']).toDouble(),
-        ),
-      ));
-    }
-
-    addMarker(symbolz, mapController);
-
-    return responseJson ?? [];
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
         floatingActionButton: FloatingActionButton.extended(
           label: Text('Search'),
           icon: Icon(Icons.search),
-          onPressed: () {
-            Navigator.push(
+          onPressed: () async {
+            await Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) => SearchPage(
@@ -173,11 +155,15 @@ class FullMapState extends State<FullMap> {
               ? []
               : [
                   IconButton(
-                      onPressed: () => {
-                            mapController.animateCamera(CameraUpdate.newLatLng(
-                              LatLng(userlocate.latitude, userlocate.longitude),
-                            ))
-                          },
+                      onPressed: userlocate == null
+                          ? null
+                          : () => {
+                                mapController
+                                    .animateCamera(CameraUpdate.newLatLng(
+                                  LatLng(userlocate.latitude,
+                                      userlocate.longitude),
+                                ))
+                              },
                       icon: Icon(Icons.location_on))
                 ],
           leading: BackButton(
@@ -194,20 +180,13 @@ class FullMapState extends State<FullMap> {
           ),
         ),
         body: MapboxMap(
-          styleString: 'mapbox://styles/nijefo5551/ckq5c8x2t0m3317oi6jofjlpc',
-//map can be styled @ https://studio.mapbox.com/
+          styleString:
+              'mapbox://styles/nijefo5551/ckq5c8x2t0m3317oi6jofjlpc', //map can be styled @ https://studio.mapbox.com/
           trackCameraPosition: true,
           onCameraIdle: onCameraIdle,
           tiltGesturesEnabled: false,
           zoomGesturesEnabled: true,
           rotateGesturesEnabled: false,
-// onMapClick: _addMarker, //test
-// myLocationEnabled: true,
-// myLocationRenderMode: MyLocationRenderMode.GPS,
-// myLocationTrackingMode: MyLocationTrackingMode.TrackingGPS,
-// compassEnabled: true,
-// annotationConsumeTapEvents: [AnnotationType.symbol],
-// onUserLocationUpdated: onUserLocationUpdated,
           minMaxZoomPreference: const MinMaxZoomPreference(13.0, 17.0),
           accessToken: ApiKey,
           onMapCreated: _onMapCreated,
@@ -218,8 +197,6 @@ class FullMapState extends State<FullMap> {
           onStyleLoadedCallback: onStyleLoadedCallback,
         ));
   }
-
-  void onStyleLoadedCallback() {}
 }
 
 class SearchPage extends StatelessWidget {
@@ -243,7 +220,6 @@ class SearchPage extends StatelessWidget {
           apiKey: ApiKey,
           searchHint: 'Search around',
           onSelected: (place) {
-// print(place.geometry.coordinates);
             setCords(place.geometry.coordinates, cntrl);
           },
           context: context,
