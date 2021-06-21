@@ -1,15 +1,14 @@
-import 'dart:math';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:mapbox_gl/mapbox_gl.dart';
 import 'src/page.dart';
 import 'package:location/location.dart';
 import 'mapbox_search_flutter.dart' hide Location;
-
-const ApiKey =
-    'pk.eyJ1IjoibmlqZWZvNTU1MSIsImEiOiJja3EzbHgzZXExMDI5MndrMTdxdmR1Nm5kIn0.G4JDtJ1612Ofw7VTRkP8jA';
+import 'package:http/http.dart' as http;
+import 'src/maputils.dart';
 
 class FullMapPage extends ExamplePage {
-  FullMapPage() : super(const Icon(Icons.map), 'Full screen map');
+  FullMapPage() : super(const Icon(Icons.map), 'Vaccine Map');
 
   @override
   Widget build(BuildContext context) {
@@ -30,29 +29,12 @@ class FullMapState extends State<FullMap> {
   dynamic userlocate;
   dynamic camloc;
   Symbol _selectedSymbol;
+  dynamic centers;
 
   @override
   void initState() {
     super.initState();
     WidgetsFlutterBinding.ensureInitialized();
-    getlocz();
-  }
-
-  getlocz() async {
-    await userlocation();
-    await Future.delayed(Duration(seconds: 3));
-    if (mapController != null) {
-      mapController.animateCamera(CameraUpdate.newLatLng(
-        LatLng(userlocate.latitude, userlocate.longitude),
-      ));
-    }
-  }
-
-  setCords(cords) {
-    print(cords);
-    mapController.animateCamera(CameraUpdate.newLatLng(
-      LatLng(cords[1], cords[0]),
-    ));
   }
 
   userlocation() async {
@@ -64,68 +46,106 @@ class FullMapState extends State<FullMap> {
       }
 
       userlocate = await location.getLocation();
+      await Future.delayed(Duration(seconds: 1));
+      if (mapController != null) {
+        await animateLoc(userlocate, mapController, 0);
+      }
       setState(() {
         userlocate = userlocate;
       });
-      // print([userlocate.latitude, userlocate.longitude]);
+      await fetchCentersByLatLng(userlocate);
+// print([userlocate.latitude, userlocate.longitude]);
     }
   }
 
-  void _onSymbolTapped(Symbol symbol) {
+  void _onSymbolTapped(Symbol symbol) async {
     if (_selectedSymbol != null) {
-      _updateSelectedSymbol(
-        const SymbolOptions(
-            iconSize: 0.07, iconRotate: 00.00, iconOpacity: 0.7),
-      );
+      updateSelectedSymbol(
+          SymbolOptions(iconSize: 0.07, iconRotate: 00.00, iconOpacity: 0.7),
+          mapController,
+          _selectedSymbol);
     }
     setState(() {
       _selectedSymbol = symbol;
     });
-    _updateSelectedSymbol(
-      SymbolOptions(iconSize: 0.1, iconRotate: 25.00, iconOpacity: 1),
-    );
+
+    updateSelectedSymbol(
+        SymbolOptions(iconSize: 0.1, iconRotate: 00.00, iconOpacity: 1),
+        mapController,
+        _selectedSymbol);
+
+    await animateLoc(symbol.options.geometry, mapController, 0);
   }
 
-  void _updateSelectedSymbol(SymbolOptions changes) {
-    mapController.updateSymbol(_selectedSymbol, changes);
-  }
-
-  void _onMapCreated(MapboxMapController controller) {
+  void _onMapCreated(MapboxMapController controller) async {
     mapController = controller;
     mapController.onSymbolTapped.add(_onSymbolTapped);
+    await userlocation();
   }
 
-  void onUserLocationUpdated(UserLocation loc) {}
-  void onCameraIdle() {
-    if (camloc != mapController.cameraPosition.target) {
+  void onCameraIdle() async {
+    var campos = mapController.cameraPosition.target;
+    if (camloc != campos) {
+      double distance = camloc != null
+          ? calculateDistance(camloc.latitude, camloc.longitude,
+              campos.latitude, campos.longitude)
+          : 0.0;
+
+      print(distance);
       setState(() {
         camloc = mapController.cameraPosition.target;
       });
-      // print(camloc);
+
+      if (distance > 5) {
+        await fetchCentersByLatLng(camloc);
+      }
+// print(camloc);
     }
   }
 
   @override
   void dispose() {
     if (mapController != null) {
-      mapController.onSymbolTapped.remove(_onSymbolTapped);
-      mapController.removeListener(_onMapChanged);
+      mapController.symbols.removeAll(mapController.symbols); //mistake fixed
+      mapController.removeListener(onMapChanged);
       mapController.dispose();
     }
     super.dispose();
   }
 
-  void _onMapChanged() {}
+  fetchCentersByLatLng(latlng) async {
+    final response = await http.get(Uri.parse(
+        'https://cdn-api.co-vin.in/api/v2/appointment/centers/public/findByLatLong?lat=' +
+            latlng.latitude.toString() +
+            '&' +
+            'long=' +
+            latlng.longitude.toString()));
 
-  void _addMarker(Point<double> point, LatLng coordinates) {
-    mapController.addSymbol(SymbolOptions(
-      iconSize: 0.07,
-      iconImage: 'hospital-svgrepo-com',
-      geometry: LatLng(
-        coordinates.latitude,
-        coordinates.longitude,
-      ),
-    ));
+    final responseJson = jsonDecode(response.body);
+
+// log(response.body);
+
+    setState(() {
+      centers = responseJson['centers'] as List ?? [];
+    });
+
+    List<SymbolOptions> symbolz = [];
+
+    for (var center in centers) {
+      symbolz.add(SymbolOptions(
+        iconSize: 0.07,
+        iconOpacity: 0.5,
+        iconImage: 'hospital-svgrepo-com',
+        geometry: LatLng(
+          num.parse(center['lat']).toDouble(),
+          num.parse(center['long']).toDouble(),
+        ),
+      ));
+    }
+
+    addMarker(symbolz, mapController);
+
+    return responseJson ?? [];
   }
 
   @override
@@ -140,12 +160,15 @@ class FullMapState extends State<FullMap> {
               MaterialPageRoute(
                 builder: (context) => SearchPage(
                   setCords: setCords,
+                  cntrl: mapController,
                 ),
               ),
             );
           },
         ),
         appBar: AppBar(
+          title: Text('Vaccine Map'),
+          centerTitle: true,
           actions: mapController == null
               ? []
               : [
@@ -165,26 +188,27 @@ class FullMapState extends State<FullMap> {
                   }
                 : () {
                     mapController.clearSymbols();
-                    mapController.removeListener(_onMapChanged);
+                    mapController.removeListener(onMapChanged);
                     Navigator.pop(context);
                   },
           ),
         ),
         body: MapboxMap(
           styleString: 'mapbox://styles/nijefo5551/ckq5c8x2t0m3317oi6jofjlpc',
-          //map can be styled @ https://studio.mapbox.com/
+//map can be styled @ https://studio.mapbox.com/
           trackCameraPosition: true,
           onCameraIdle: onCameraIdle,
           tiltGesturesEnabled: false,
+          zoomGesturesEnabled: true,
           rotateGesturesEnabled: false,
-          onMapClick: _addMarker,
-          // myLocationEnabled: true,
-          // myLocationRenderMode: MyLocationRenderMode.GPS,
-          // myLocationTrackingMode: MyLocationTrackingMode.TrackingGPS,
-          // compassEnabled: true,
-          // annotationConsumeTapEvents: [AnnotationType.symbol],
-          // onUserLocationUpdated: onUserLocationUpdated,
-          minMaxZoomPreference: const MinMaxZoomPreference(13.0, 13.0),
+// onMapClick: _addMarker, //test
+// myLocationEnabled: true,
+// myLocationRenderMode: MyLocationRenderMode.GPS,
+// myLocationTrackingMode: MyLocationTrackingMode.TrackingGPS,
+// compassEnabled: true,
+// annotationConsumeTapEvents: [AnnotationType.symbol],
+// onUserLocationUpdated: onUserLocationUpdated,
+          minMaxZoomPreference: const MinMaxZoomPreference(13.0, 17.0),
           accessToken: ApiKey,
           onMapCreated: _onMapCreated,
           initialCameraPosition: CameraPosition(
@@ -200,7 +224,8 @@ class FullMapState extends State<FullMap> {
 
 class SearchPage extends StatelessWidget {
   final setCords;
-  const SearchPage({Key key, this.setCords}) : super(key: key);
+  final cntrl;
+  const SearchPage({Key key, this.setCords, this.cntrl}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -218,8 +243,8 @@ class SearchPage extends StatelessWidget {
           apiKey: ApiKey,
           searchHint: 'Search around',
           onSelected: (place) {
-            // print(place.geometry.coordinates);
-            setCords(place.geometry.coordinates);
+// print(place.geometry.coordinates);
+            setCords(place.geometry.coordinates, cntrl);
           },
           context: context,
         ),
